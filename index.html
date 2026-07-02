@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>App Deportiva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            overflow-x: hidden;
+            overscroll-behavior-y: contain;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        .slider-container {
+            display: flex;
+            width: 400vw;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            will-change: transform;
+        }
+        .slide {
+            width: 100vw;
+            flex-shrink: 0;
+            min-height: calc(100vh - 56px);
+            position: relative;
+        }
+        ::-webkit-scrollbar { width: 0px; background: transparent; }
+        
+        .avatar-racer {
+            will-change: transform;
+        }
+
+        .time-tag {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+        .race-track-scale {
+            transform: scale(0.65);
+            transform-origin: top center;
+        }
+    </style>
+</head>
+<body class="bg-white text-black select-none">
+
+    <header class="sticky top-0 bg-white border-b border-gray-200 z-40">
+        <nav class="flex justify-around items-center h-14 relative">
+            <button onclick="goToSlide(0)" id="tab-0" class="w-1/4 h-full text-[10px] font-black tracking-wider transition-all duration-300 text-black border-b-2 border-black focus:outline-none">
+                CARRERA
+            </button>
+            <button onclick="goToSlide(1)" id="tab-1" class="w-1/4 h-full text-[10px] font-black tracking-wider transition-all duration-300 text-gray-400 border-b-2 border-transparent focus:outline-none">
+                TABLAS
+            </button>
+            <button onclick="goToSlide(2)" id="tab-2" class="w-1/4 h-full text-[10px] font-black tracking-wider transition-all duration-300 text-gray-400 border-b-2 border-transparent focus:outline-none">
+                CIRCUITOS
+            </button>
+            <button onclick="goToSlide(3)" id="tab-3" class="w-1/4 h-full text-[10px] font-black tracking-wider transition-all duration-300 text-gray-400 border-b-2 border-transparent focus:outline-none">
+                ATLETAS
+            </button>
+        </nav>
+    </header>
+
+    <main id="slider-wrapper" class="overflow-hidden w-full">
+        <div id="slider" class="slider-container">
+            
+            <section class="slide flex flex-col relative h-[calc(100vh-56px)]">
+                <div id="matchup-setup" class="p-6 flex flex-col h-full justify-between">
+                    <h1 class="text-2xl font-black mb-4 tracking-widest text-center">ENFRENTAMIENTO</h1>
+                    
+                    <div class="flex justify-center space-x-6 mb-4">
+                        <label class="flex items-center space-x-2 font-bold text-xs cursor-pointer">
+                            <input type="radio" name="match_mode" value="1v1" checked class="accent-black" onchange="toggleMatchMode()">
+                            <span>1 VS 1</span>
+                        </label>
+                        <label class="flex items-center space-x-2 font-bold text-xs cursor-pointer">
+                            <input type="radio" name="match_mode" value="indiv" class="accent-black" onchange="toggleMatchMode()">
+                            <span>INDIVIDUAL</span>
+                        </label>
+                    </div>
+
+                    <div class="flex-1 flex flex-col justify-center space-y-6">
+                        <div id="selects-container" class="flex justify-center items-center space-x-2 w-full">
+                            <div id="col-athlete-a" class="w-1/3 flex flex-col items-center transition-all">
+                                <label class="text-[10px] font-bold tracking-wider mb-2">ATLETA A</label>
+                                <select id="select-athlete-a" class="w-full text-xs border border-black rounded p-2 text-center focus:outline-none truncate bg-white" onchange="checkMatchupReady()"></select>
+                            </div>
+                            
+                            <div id="col-track" class="w-1/3 flex flex-col items-center">
+                                <label class="text-[10px] font-bold tracking-wider mb-2 text-blue-600">CIRCUITO</label>
+                                <select id="select-track" class="w-full text-xs border border-blue-600 rounded p-2 text-center focus:outline-none truncate bg-white" onchange="checkMatchupReady()"></select>
+                            </div>
+
+                            <div id="col-athlete-b" class="w-1/3 flex flex-col items-center transition-all">
+                                <label class="text-[10px] font-bold tracking-wider mb-2">ATLETA B</label>
+                                <select id="select-athlete-b" class="w-full text-xs border border-black rounded p-2 text-center focus:outline-none truncate bg-white" onchange="checkMatchupReady()"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="pb-6">
+                        <button id="btn-start-match" disabled onclick="startMatchup()" class="w-full bg-gray-300 text-gray-500 font-black tracking-widest py-4 rounded-lg cursor-not-allowed transition-colors">
+                            ENFRENTAMIENTO LISTO
+                        </button>
+                    </div>
+                </div>
+
+                <div id="matchup-race" class="hidden absolute inset-0 bg-white z-10 flex flex-col h-[calc(100vh-56px)]">
+                    <div class="bg-black text-white p-3 text-center flex justify-between items-center z-20 shadow-md relative">
+                        <div id="racer-a-name" class="text-xs font-bold w-1/3 truncate text-center mx-auto">A</div>
+                        <div id="vs-label" class="text-sm font-black tracking-widest text-yellow-400 w-1/3">VS</div>
+                        <div id="racer-b-name" class="text-xs font-bold w-1/3 truncate text-center mx-auto">B</div>
+                    </div>
+                    
+                    <div class="flex-1 flex overflow-y-auto relative bg-gray-50 pb-44" id="race-scroll-container">
+                        <div class="w-full flex h-fit race-track-scale min-h-[160%] justify-center relative">
+                            <div class="w-1/2 border-r border-dashed border-gray-300 relative flex flex-col items-center pt-10" id="lane-a">
+                                <div id="avatar-a" class="absolute w-12 h-12 rounded-full border-2 border-black bg-white object-cover shadow-lg avatar-racer z-30 flex items-center justify-center left-1/2 -translate-x-1/2">
+                                    <img id="img-avatar-a" src="" class="w-full h-full rounded-full object-cover">
+                                </div>
+                            </div>
+                            <div class="w-1/2 relative flex flex-col items-center pt-10" id="lane-b">
+                                <div id="avatar-b" class="absolute w-12 h-12 rounded-full border-2 border-black bg-white object-cover shadow-lg avatar-racer z-30 flex items-center justify-center left-1/2 -translate-x-1/2">
+                                    <img id="img-avatar-b" src="" class="w-full h-full rounded-full object-cover">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white border-t border-gray-200 p-3 z-[40] shadow-lg flex flex-col items-center space-y-2 relative min-h-[90px]">
+                        <button id="btn-trigger-race" onclick="triggerRaceStart()" class="w-11/12 bg-green-600 hover:bg-green-700 text-white font-black tracking-widest py-3 rounded-lg shadow-md transition-all text-xs">
+                            INICIAR CARRERA
+                        </button>
+                        <div id="race-controls-panel" class="hidden flex justify-center items-center w-full">
+                            <button id="btn-pause" onclick="togglePauseGame()" class="bg-red-500 text-white font-black text-[10px] px-2 py-1 rounded mx-1 w-16 h-7">PAUSA</button>
+                            <button onclick="setGameSpeed(1)" class="btn-speed bg-black text-white font-bold text-[10px] px-2 py-1 rounded mx-1 h-7 w-8">x1</button>
+                            <button onclick="setGameSpeed(2)" class="btn-speed bg-gray-200 text-gray-700 font-bold text-[10px] px-2 py-1 rounded mx-1 h-7 w-8">x2</button>
+                            <button onclick="setGameSpeed(3)" class="btn-speed bg-gray-200 text-gray-700 font-bold text-[10px] px-2 py-1 rounded mx-1 h-7 w-8">x3</button>
+                            <button onclick="setGameSpeed(4)" class="btn-speed bg-gray-200 text-gray-700 font-bold text-[10px] px-2 py-1 rounded mx-1 h-7 w-8">x4</button>
+                        </div>
+
+                        <div id="race-results" class="hidden absolute inset-x-0 bottom-0 w-full bg-black text-white p-3 flex flex-row items-center justify-between z-[50] animate-fade-in border-t-2 border-yellow-400">
+                            <div class="flex flex-col items-start px-2">
+                                <h2 class="text-xs font-black text-yellow-400 tracking-wide">RESULTADO</h2>
+                                <p id="winner-text" class="text-sm font-black uppercase truncate max-w-[200px]"></p>
+                                <p id="winner-time" class="text-[11px] text-gray-300 font-mono"></p>
+                            </div>
+                            <button onclick="exitMatchup()" class="bg-white text-black font-black py-2 px-5 rounded text-xs tracking-wider uppercase shadow-md mr-2 active:scale-95 transition-transform">VOLVER</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide p-5 flex flex-col relative h-[calc(100vh-56px)] bg-gray-50">
+                <div class="flex justify-between items-center w-full mb-3">
+                    <h1 class="text-xl font-black tracking-widest">ESTADÍSTICAS</h1>
+                    <button onclick="resetStatsHistory()" class="bg-red-600 text-white font-black text-[10px] px-3 py-1.5 rounded tracking-wide active:scale-95 transition-transform">
+                        REINICIAR HISTORIAL
+                    </button>
+                </div>
+                
+                <div class="flex space-x-2 mb-3 bg-white p-1 border border-gray-200 rounded-lg">
+                    <button id="btn-gender-h" onclick="changeTablesGender('hombre')" class="w-1/2 py-1.5 text-xs font-black rounded uppercase transition-all bg-black text-white">HOMBRES</button>
+                    <button id="btn-gender-m" onclick="changeTablesGender('mujer')" class="w-1/2 py-1.5 text-xs font-black rounded uppercase transition-all bg-gray-100 text-gray-500">MUJERES</button>
+                </div>
+
+                <div class="flex space-x-2 mb-3 bg-white p-1 border border-gray-200 rounded-lg">
+                    <button id="btn-mode-1v1" onclick="changeTablesMode('1v1')" class="w-1/2 py-1 text-[10px] font-black rounded uppercase transition-all bg-blue-600 text-white">MODO 1 VS 1</button>
+                    <button id="btn-mode-indiv" onclick="changeTablesMode('indiv')" class="w-1/2 py-1 text-[10px] font-black rounded uppercase transition-all bg-gray-100 text-gray-500">INDIVIDUAL</button>
+                </div>
+
+                <div class="flex-1 overflow-y-auto space-y-5 pb-20 pr-1">
+                    <div id="wrapper-table-general" class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
+                        <h2 class="text-xs font-black tracking-widest mb-2 text-gray-700 uppercase border-b pb-1">RENDIMIENTO GENERAL (1VS1)</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-200 text-gray-400 font-bold text-[10px]">
+                                        <th class="py-1 text-center w-6">POS</th>
+                                        <th class="py-1 pl-2">PERFIL</th>
+                                        <th class="py-1 text-center w-8">G</th>
+                                        <th class="py-1 text-center w-8">P</th>
+                                        <th class="py-1 text-center w-10">+</th>
+                                        <th class="py-1 text-center w-10">-</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-general"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
+                        <h2 class="text-xs font-black tracking-widest mb-2 text-gray-700 uppercase border-b pb-1">RÉCORD DE CIRCUITO</h2>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs border-collapse">
+                                <thead>
+                                    <tr class="border-b border-gray-200 text-gray-400 font-bold text-[10px]">
+                                        <th class="py-1 text-center w-6">POS</th>
+                                        <th class="py-1 pl-2">ATLETA</th>
+                                        <th class="py-1">CIRCUITO</th>
+                                        <th class="py-1 text-right">RÉCORD</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tbody-records"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl p-3 border border-gray-200 shadow-sm">
+                        <h2 class="text-xs font-black tracking-widest mb-2 text-gray-700 uppercase border-b pb-1">REGISTRO DE ENFRENTAMIENTOS</h2>
+                        <div class="space-y-1.5 max-h-60 overflow-y-auto font-mono text-[11px]" id="list-history-logs"></div>
+                    </div>
+
+                    <div class="flex justify-center pt-2">
+                        <button onclick="copyAllTablesData()" class="flex items-center justify-center space-x-2 bg-black hover:bg-gray-800 text-white font-black text-xs py-3 px-6 rounded-xl w-full transition-transform active:scale-95 shadow-md uppercase tracking-wider">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                            </svg>
+                            <span>Copiar Tablas del Género</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide flex flex-col relative h-[calc(100vh-56px)]">
+                <div id="tracks-list-view" class="p-6 flex flex-col h-full">
+                    <div class="flex justify-between items-center w-full mb-6">
+                        <h1 class="text-2xl font-black tracking-widest">CIRCUITOS</h1>
+                        <button onclick="openTrackBuilder()" class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl active:scale-95 transition-transform focus:outline-none">
+                            +
+                        </button>
+                    </div>
+                    <div id="saved-tracks-container" class="flex-1 w-full space-y-4 overflow-y-auto pb-20"></div>
+                </div>
+
+                <div id="track-builder-view" class="hidden absolute inset-0 bg-white z-20 flex flex-col">
+                    <div class="bg-gray-100 p-4 border-b border-gray-300 text-center relative shadow-sm">
+                        <input type="text" id="track-name-input" placeholder="NOMBRE DE LA PISTA" class="w-full bg-transparent text-center font-black text-lg focus:outline-none tracking-widest placeholder-gray-400">
+                    </div>
+                    
+                    <div class="flex-1 overflow-y-auto w-full p-6 flex flex-col items-center space-y-2 pb-32" id="track-canvas"></div>
+
+                    <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 p-4 flex justify-between space-x-4 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.1)]">
+                        <button onclick="closeTrackBuilder()" class="w-1/2 border-2 border-black text-black font-black tracking-wider py-3 rounded active:bg-gray-100">SALIR</button>
+                        <button onclick="saveTrack()" class="w-1/2 bg-black text-white font-black tracking-wider py-3 rounded active:bg-gray-800">GUARDAR</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="slide p-6 flex flex-col relative h-[calc(100vh-56px)]">
+                <div class="flex justify-between items-center w-full mb-6">
+                    <h1 class="text-2xl font-black tracking-widest">ATLETAS</h1>
+                    <button onclick="openModal()" class="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl active:scale-95 transition-transform focus:outline-none">
+                        +
+                    </button>
+                </div>
+
+                <div id="athletes-list" class="flex-1 w-full space-y-4 overflow-y-auto pb-20 pr-1"></div>
+            </section>
+        </div>
+    </main>
+
+    <div id="modal-edit-segment-inline" class="fixed inset-0 bg-black bg-opacity-60 z-[80] hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-xl p-5 shadow-2xl">
+            <h3 class="font-black text-base text-center border-b pb-2 mb-4 tracking-wider uppercase">MODIFICAR VALORES DE ZONA</h3>
+            <div id="edit-segment-fields" class="space-y-4"></div>
+            <div class="flex space-x-3 mt-5">
+                <button onclick="closeEditSegmentInline()" class="w-1/2 border border-black text-black font-bold py-2 rounded text-xs">CANCELAR</button>
+                <button onclick="confirmUpdateSegmentInline()" class="w-1/2 bg-black text-white font-bold py-2 rounded text-xs">ACTUALIZAR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="athlete-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 overflow-y-auto max-h-[90vh] shadow-2xl">
+            <h2 id="modal-title" class="text-xl font-black tracking-wider mb-6 text-center">CREAR ATLETA</h2>
+            <form id="athlete-form" oninput="validateForm()">
+                <input type="hidden" id="athlete-id">
+                <div class="flex flex-col items-center mb-6">
+                    <div class="relative w-24 h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-full flex items-center justify-center overflow-hidden cursor-pointer" onclick="document.getElementById('athlete-photo').click()">
+                        <img id="photo-preview" class="w-full h-full object-cover hidden" alt="Vista previa">
+                        <div id="photo-placeholder" class="text-center p-2">
+                            <span class="text-xs text-gray-400 font-bold">Subir Foto</span>
+                        </div>
+                    </div>
+                    <input type="file" id="athlete-photo" accept="image/*" class="hidden" onchange="previewImage(event)">
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs font-bold tracking-wide mb-2">NOMBRE DEL ATLETA</label>
+                    <input type="text" id="athlete-name" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-black" placeholder="Ej. Juan Pérez" required>
+                </div>
+                <div class="mb-6">
+                    <label class="block text-xs font-bold tracking-wide mb-2">GÉNERO</label>
+                    <div class="flex space-x-4">
+                        <label class="flex items-center space-x-2 text-sm font-medium cursor-pointer">
+                            <input type="radio" name="athlete-gender" value="hombre" class="accent-black" onchange="validateForm()" required>
+                            <span>Hombre</span>
+                        </label>
+                        <label class="flex items-center space-x-2 text-sm font-medium cursor-pointer">
+                            <input type="radio" name="athlete-gender" value="mujer" class="accent-black" onchange="validateForm()">
+                            <span>Mujer</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="mb-6">
+                    <div class="flex justify-between items-center border-b pb-1 mb-3">
+                        <label class="block text-xs font-bold tracking-wide mb-0">HABILIDADES (1 - 100)</label>
+                        <button type="button" onclick="randomizeSkills()" class="bg-gray-100 hover:bg-gray-200 rounded p-1.5 flex items-center justify-center transition-colors">
+                            <svg class="w-5 h-5 text-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2" /><circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.5" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.5" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.5" fill="currentColor"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center"><span class="text-sm font-medium">Velocidad</span><input type="number" id="skill-velocidad" min="1" max="100" class="skill-input w-20 border border-gray-300 rounded text-center py-1 text-sm focus:outline-none focus:border-black" required></div>
+                        <div class="flex justify-between items-center"><span class="text-sm font-medium">Agilidad</span><input type="number" id="skill-agilidad" min="1" max="100" class="skill-input w-20 border border-gray-300 rounded text-center py-1 text-sm focus:outline-none focus:border-black" required></div>
+                        <div class="flex justify-between items-center"><span class="text-sm font-medium">Fuerza</span><input type="number" id="skill-fuerza" min="1" max="100" class="skill-input w-20 border border-gray-300 rounded text-center py-1 text-sm focus:outline-none focus:border-black" required></div>
+                        <div class="flex justify-between items-center"><span class="text-sm font-medium">Inteligencia</span><input type="number" id="skill-inteligencia" min="1" max="100" class="skill-input w-20 border border-gray-300 rounded text-center py-1 text-sm focus:outline-none focus:border-black" required></div>
+                        <div class="flex justify-between items-center"><span class="text-sm font-medium">Puntería</span><input type="number" id="skill-punteria" min="1" max="100" class="skill-input w-20 border border-gray-300 rounded text-center py-1 text-sm focus:outline-none focus:border-black" required></div>
+                        <div class="flex justify-between items-center"><span class="text-sm font-medium">Compostura</span><input type="number" id="skill-compostura" min="1" max="100" class="skill-input w-20 border border-gray-300 rounded text-center py-1 text-sm focus:outline-none focus:border-black" required></div>
+                    </div>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-3 rounded-lg mb-6 border border-gray-200">
+                    <span class="text-sm font-bold tracking-wide">MEDIA</span>
+                    <input type="text" id="athlete-average" readonly class="w-20 bg-gray-200 font-bold text-center py-1 rounded text-sm cursor-not-allowed" value="0">
+                </div>
+                <div class="flex space-x-3">
+                    <button type="button" onclick="closeModal()" class="w-1/2 border border-black text-black font-bold py-2 rounded text-sm active:bg-gray-100 transition-colors">SALIR</button>
+                    <button type="button" id="btn-save" onclick="saveAthlete(event)" disabled class="w-1/2 bg-gray-300 text-gray-500 font-bold py-2 rounded text-sm cursor-not-allowed transition-colors">GUARDAR</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-segment-options" class="fixed inset-0 bg-black bg-opacity-60 z-[60] hidden flex items-end justify-center">
+        <div class="bg-white w-full max-w-md rounded-t-3xl p-6 pb-10">
+            <h3 class="text-center font-black tracking-widest text-lg mb-6">AÑADIR ZONA</h3>
+            <div class="space-y-4">
+                <button onclick="openFormCarrera()" class="w-full flex items-center justify-between border-2 border-black p-4 rounded-xl active:bg-gray-100">
+                    <span class="font-bold">ZONA DE CARRERA</span>
+                    <div class="flex space-x-1"><div class="w-1 h-6 bg-black"></div><div class="w-1 h-6 bg-black"></div></div>
+                </button>
+                <button onclick="openFormSeccion()" class="w-full flex items-center justify-between border-2 border-black p-4 rounded-xl active:bg-gray-100">
+                    <span class="font-bold">SECCIÓN</span>
+                    <div class="w-8 h-6 border-2 border-black bg-yellow-300"></div>
+                </button>
+                <button onclick="openFormTiro()" class="w-full flex items-center justify-between border-2 border-black p-4 rounded-xl active:bg-gray-100">
+                    <span class="font-bold">ZONA DE TIRO</span>
+                    <div class="w-8 h-8 border-2 border-black flex items-center justify-center space-x-0.5 p-0.5">
+                        <div class="w-2 h-2 rounded-full border border-black"></div><div class="w-2 h-2 rounded-full border border-black"></div>
+                    </div>
+                </button>
+            </div>
+            <button onclick="closeSegmentOptions()" class="w-full mt-6 text-gray-500 font-bold text-sm">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="modal-segment-form" class="fixed inset-0 bg-black bg-opacity-70 z-[70] hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 overflow-y-auto max-h-[90vh] shadow-2xl relative">
+            <h2 id="segment-form-title" class="text-xl font-black tracking-wider mb-6 text-center text-blue-600"></h2>
+            
+            <div id="form-body-carrera" class="hidden segment-form-body space-y-4">
+                <div>
+                    <label class="block text-xs font-bold tracking-wide mb-2">METROS DE LA ZONA</label>
+                    <input type="number" id="carrera-meters" class="w-full border border-black rounded px-3 py-3 text-center text-xl font-black focus:outline-none" placeholder="Ej. 80">
+                </div>
+            </div>
+
+            <div id="form-body-seccion" class="hidden segment-form-body space-y-4">
+                <div>
+                    <label class="block text-xs font-bold tracking-wide mb-2">TIEMPO PROMEDIO (SEGUNDOS)</label>
+                    <input type="number" id="seccion-time" class="w-full border border-black rounded px-3 py-3 text-center text-xl font-black focus:outline-none" placeholder="Ej. 6">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold tracking-wide mb-2 border-b border-gray-200 pb-2">HABILIDADES REQUERIDAS</label>
+                    <div class="grid grid-cols-2 gap-3 mt-3" id="seccion-skills-container"></div>
+                </div>
+            </div>
+
+            <div id="form-body-tiro" class="hidden segment-form-body space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] font-bold tracking-wide mb-1">OBJETIVOS A TIRAR</label>
+                        <input type="number" id="tiro-targets" class="w-full border border-black rounded px-2 py-2 text-center font-bold" placeholder="Ej. 5">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold tracking-wide mb-1">PROYECTILES DISPONIBLES</label>
+                        <input type="number" id="tiro-ammo" class="w-full border border-black rounded px-2 py-2 text-center font-bold" placeholder="Ej. 5">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold tracking-wide mb-1">SEG MÍN POR DISPARO</label>
+                        <input type="number" id="tiro-shoot-time" step="0.1" class="w-full border border-black rounded px-2 py-2 text-center font-bold" placeholder="Ej. 2">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold tracking-wide mb-1">SEG MÍN POR RECOGER</label>
+                        <input type="number" id="tiro-fetch-time" step="0.1" class="w-full border border-black rounded px-2 py-2 text-center font-bold" placeholder="Ej. 3">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold tracking-wide mt-4 mb-2 border-b border-gray-200 pb-2">HABILIDADES REQUERIDAS</label>
+                    <div class="grid grid-cols-2 gap-3 mt-3" id="tiro-skills-container"></div>
+                </div>
+            </div>
+
+            <div class="flex space-x-3 mt-8">
+                <button onclick="closeSegmentForm()" class="w-1/2 border border-black text-black font-bold py-3 rounded text-sm">CANCELAR</button>
+                <button onclick="saveSegment()" class="w-1/2 bg-blue-600 text-white font-bold py-3 rounded text-sm">ACEPTAR</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .pulse-border { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { border-color: rgba(37,99,235,1); box-shadow: 0 0 0 0 rgba(37,99,235,0.4); } 70% { border-color: rgba(37,99,235,0.5); box-shadow: 0 0 0 8px rgba(37,99,235,0); } 100% { border-color: rgba(37,99,235,1); box-shadow: 0 0 0 0 rgba(37,99,235,0); } }
+    </style>
+
+    <script>
+        // --- BASE DE DATOS LOCAL Y ESTRUCTURAS DE HISTORIAL ---
+        let athletesList = JSON.parse(localStorage.getItem('app_athletesList')) || [];
+        let tracksList = JSON.parse(localStorage.getItem('app_tracksList')) || [];
+        
+        let statsState = JSON.parse(localStorage.getItem('app_statsState')) || {
+            hombre: {
+                general1v1: {}, 
+                records1v1: {}, 
+                recordsIndiv: {},
+                logs1v1: [],    
+                logsIndiv: []   
+            },
+            mujer: {
+                general1v1: {},
+                records1v1: {},
+                recordsIndiv: {},
+                logs1v1: [],
+                logsIndiv: []
+            }
+        };
+
+        function saveToLocalStorage() {
+            localStorage.setItem('app_athletesList', JSON.stringify(athletesList));
+            localStorage.setItem('app_tracksList', JSON.stringify(tracksList));
+            localStorage.setItem('app_statsState', JSON.stringify(statsState));
+        }
+
+        let uploadedPhotoBase64 = ""; 
+        let currentActiveIndex = 0;
+        
+        let currentTrackSegments = [];
+        let pendingSegmentType = null;
+        let editTrackId = null;
+        let inlineEditingSegmentIndex = null;
+
+        let activeTablesGender = 'hombre';
+        let activeTablesMode = '1v1';
+
+        const skillNames = ["Velocidad", "Agilidad", "Fuerza", "Inteligencia", "Punteria", "Compostura"];
+        let cachedRaceParams = null;
+
+        function formatRaceTimeDisplay(seconds) {
+            if (seconds === Infinity || seconds === null || undefined === seconds) return "SIN TIEMPO";
+            if (seconds >= 60) {
+                let mins = Math.floor(seconds / 60);
+                let secs = (seconds % 60).toFixed(2);
+                if (parseFloat(secs) < 10) secs = "0" + secs;
+                return `${mins}:${secs}m`;
+            }
+            return `${seconds.toFixed(2)}s`;
+        }
+
+        // --- SISTEMA DE PESTAÑAS ---
+        const slider = document.getElementById('slider');
+        const tabs = [document.getElementById('tab-0'), document.getElementById('tab-1'), document.getElementById('tab-2'), document.getElementById('tab-3')];
+
+        function goToSlide(index) {
+            currentActiveIndex = index;
+            slider.style.transform = `translateX(-${index * 100}vw)`;
+            tabs.forEach((tab, i) => {
+                if (i === index) {
+                    tab.classList.remove('text-gray-400', 'border-transparent');
+                    tab.classList.add('text-black', 'border-black');
+                } else {
+                    tab.classList.remove('text-black', 'border-black');
+                    tab.classList.add('text-gray-400', 'border-transparent');
+                }
+            });
+            if(index === 0) updateMatchupSelects();
+            if(index === 1) renderStatsTables();
+        }
+
+        // --- LÓGICA DE ATLETAS ---
+        const modal = document.getElementById('athlete-modal');
+        const form = document.getElementById('athlete-form');
+        const skillInputs = document.querySelectorAll('.skill-input');
+
+        skillInputs.forEach(input => {
+            input.addEventListener('input', () => {
+                if (input.value !== "") {
+                    let val = parseInt(input.value);
+                    if (val > 100) input.value = 100;
+                    if (val < 1) input.value = 1;
+                }
+                calculateAverage();
+                validateForm();
+            });
+        });
+
+        function randomizeSkills() {
+            skillInputs.forEach(input => { input.value = Math.floor(Math.random() * 100) + 1; });
+            calculateAverage();
+            validateForm();
+        }
+
+        function openModal(editId = null) {
+            form.reset();
+            uploadedPhotoBase64 = "";
+            document.getElementById('photo-preview').classList.add('hidden');
+            document.getElementById('photo-placeholder').classList.remove('hidden');
+            document.getElementById('athlete-id').value = "";
+            document.getElementById('modal-title').innerText = "CREAR ATLETA";
+            
+            if (editId !== null) {
+                document.getElementById('modal-title').innerText = "EDITAR ATLETA";
+                const athlete = athletesList.find(a => a.id === editId);
+                if (athlete) {
+                    document.getElementById('athlete-id').value = athlete.id;
+                    document.getElementById('athlete-name').value = athlete.name;
+                    document.getElementById('skill-velocidad').value = athlete.skills.velocidad;
+                    document.getElementById('skill-agilidad').value = athlete.skills.agilidad;
+                    document.getElementById('skill-fuerza').value = athlete.skills.fuerza;
+                    document.getElementById('skill-inteligencia').value = athlete.skills.inteligencia;
+                    document.getElementById('skill-punteria').value = athlete.skills.punteria;
+                    document.getElementById('skill-compostura').value = athlete.skills.compostura;
+                    if (athlete.gender) {
+                        const genderRadio = form.querySelector(`input[name="athlete-gender"][value="${athlete.gender}"]`);
+                        if (genderRadio) genderRadio.checked = true;
+                    }
+                    if (athlete.photo) {
+                        uploadedPhotoBase64 = athlete.photo;
+                        document.getElementById('photo-preview').src = athlete.photo;
+                        document.getElementById('photo-preview').classList.remove('hidden');
+                        document.getElementById('photo-placeholder').classList.add('hidden');
+                    }
+                    calculateAverage();
+                }
+            }
+            validateForm();
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() { modal.classList.add('hidden'); }
+
+        function previewImage(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const maxDimension = 120;
+                        let width = img.width;
+                        let height = img.height;
+
+                        if (width > height) {
+                            if (width > maxDimension) {
+                                height *= maxDimension / width;
+                                width = maxDimension;
+                            }
+                        } else {
+                            if (height > maxDimension) {
+                                width *= maxDimension / height;
+                                height = maxDimension;
+                            }
+                        }
+                        canvas.width = width;
+                        canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        uploadedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.75);
+                        document.getElementById('photo-preview').src = uploadedPhotoBase64;
+                        document.getElementById('photo-preview').classList.remove('hidden');
+                        document.getElementById('photo-placeholder').classList.add('hidden');
+                        validateForm();
+                    }
+                    img.src = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function calculateAverage() {
+            let total = 0, count = 0;
+            skillInputs.forEach(input => { if (input.value !== "") { total += parseInt(input.value); count++; } });
+            document.getElementById('athlete-average').value = count === 6 ? Math.round(total / count) : 0;
+        }
+
+        function validateForm() {
+            const name = document.getElementById('athlete-name').value.trim();
+            const genderSelected = form.querySelector('input[name="athlete-gender"]:checked');
+            let allSkillsFilled = true;
+            skillInputs.forEach(input => { if (input.value === "" || parseInt(input.value) < 1 || parseInt(input.value) > 100) allSkillsFilled = false; });
+            const btnSave = document.getElementById('btn-save');
+            
+            if (name && genderSelected && allSkillsFilled && uploadedPhotoBase64 !== "") {
+                btnSave.disabled = false;
+                btnSave.className = "w-1/2 bg-black text-white font-bold py-2 rounded text-sm active:bg-gray-800 transition-colors";
+            } else {
+                btnSave.disabled = true;
+                btnSave.className = "w-1/2 bg-gray-300 text-gray-500 font-bold py-2 rounded text-sm cursor-not-allowed transition-colors";
+            }
+        }
+
+        function saveAthlete(event) {
+            event.preventDefault();
+            const id = document.getElementById('athlete-id').value;
+            const data = {
+                id: id ? Number(id) : Date.now() + Math.floor(Math.random() * 1000),
+                name: document.getElementById('athlete-name').value.trim(),
+                gender: form.querySelector('input[name="athlete-gender"][value="hombre"]').checked ? "hombre" : "mujer",
+                photo: uploadedPhotoBase64,
+                media: document.getElementById('athlete-average').value,
+                skills: {
+                    velocidad: parseInt(document.getElementById('skill-velocidad').value),
+                    agilidad: parseInt(document.getElementById('skill-agilidad').value),
+                    fuerza: parseInt(document.getElementById('skill-fuerza').value),
+                    inteligencia: parseInt(document.getElementById('skill-inteligencia').value),
+                    punteria: parseInt(document.getElementById('skill-punteria').value),
+                    compostura: parseInt(document.getElementById('skill-compostura').value),
+                }
+            };
+            
+            if (id) {
+                const idx = athletesList.findIndex(a => a.id == id);
+                if (idx !== -1) athletesList[idx] = data;
+            } else {
+                athletesList.push(data);
+            }
+            
+            saveToLocalStorage();
+            closeModal(); 
+            renderAthletes(); 
+            updateMatchupSelects();
+        }
+
+        function renderAthletes() {
+            const list = document.getElementById('athletes-list');
+            list.innerHTML = "";
+            if (athletesList.length === 0) {
+                list.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 text-sm">No hay atletas registrados.</p></div>`;
+                return;
+            }
+            athletesList.forEach(athlete => {
+                const icon = athlete.gender === 'hombre' ? 
+                    `<svg class="w-4 h-4 text-blue-500 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="10" cy="14" r="6"/><polyline points="15 3 21 3 21 9"/><line x1="15" y1="9" x2="21" y2="3"/></svg>` : 
+                    `<svg class="w-4 h-4 text-rose-500 inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="8" r="6"/><line x1="12" y1="14" x2="12" y2="22"/><line x1="9" y1="18" x2="15" y2="18"/></svg>`;
+                list.innerHTML += `
+                    <div class="flex items-center justify-between border border-gray-200 rounded-xl p-3 shadow-sm bg-white">
+                        <div class="flex items-center space-x-4">
+                            <img src="${athlete.photo}" class="w-12 h-12 rounded-full object-cover border border-gray-300">
+                            <div>
+                                <h3 class="font-bold text-base uppercase">${athlete.name} ${icon}</h3>
+                                <span class="bg-gray-100 text-xs font-black px-2 py-0.5 rounded">MEDIA: ${athlete.media}</span>
+                            </div>
+                        </div>
+                        <button onclick="openModal(${athlete.id})" class="p-2 text-gray-500 hover:text-black">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"/></svg>
+                        </button>
+                    </div>`;
+            });
+        }
+
+        // --- CREACIÓN Y EDICIÓN COMPLETA DE PISTAS ---
+        function openTrackBuilder(editId = null) {
+            document.getElementById('tracks-list-view').classList.add('hidden');
+            document.getElementById('track-builder-view').classList.remove('hidden');
+            if (editId !== null) {
+                editTrackId = editId;
+                const track = tracksList.find(t => t.id === editId);
+                document.getElementById('track-name-input').value = track.name;
+                currentTrackSegments = JSON.parse(JSON.stringify(track.segments));
+            } else {
+                editTrackId = null;
+                document.getElementById('track-name-input').value = "";
+                currentTrackSegments = [];
+            }
+            renderTrackCanvas();
+        }
+
+        function closeTrackBuilder() {
+            document.getElementById('track-builder-view').classList.add('hidden');
+            document.getElementById('tracks-list-view').classList.remove('hidden');
+        }
+
+        function renderTrackCanvas() {
+            const canvas = document.getElementById('track-canvas');
+            canvas.innerHTML = '';
+            
+            if (currentTrackSegments.length === 0) {
+                canvas.innerHTML = `<p class="text-gray-400 text-xs mb-4 font-bold tracking-widest mt-10">INICIO DE LA PISTA</p>`;
+            }
+
+            currentTrackSegments.forEach((seg, index) => {
+                const mainWrapper = document.createElement('div');
+                mainWrapper.className = 'w-full max-w-xs flex items-center justify-between space-x-4 my-2 px-4 bg-gray-50 py-2 border border-gray-100 rounded-lg';
+                
+                const segmentVisual = document.createElement('div');
+                segmentVisual.className = 'flex flex-col items-center justify-center flex-1';
+                
+                if (seg.type === 'carrera') {
+                    let h = Math.max(35, Math.min(180, seg.meters * 1.5));
+                    segmentVisual.innerHTML = `
+                        <div class="text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-wide">Carrera: ${seg.meters}m</div>
+                        <div class="w-8 border-l-4 border-r-4 border-black" style="height: ${h}px"></div>
+                    `;
+                } else if (seg.type === 'seccion') {
+                    segmentVisual.innerHTML = `
+                        <div class="text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-wide">Sección: ${seg.avgTime}s</div>
+                        <div class="w-16 h-12 border-2 border-black bg-yellow-300 flex items-center justify-center shadow-inner relative">
+                            <span class="font-black text-black tracking-widest text-[10px] opacity-60">SEC</span>
+                        </div>
+                    `;
+                } else if (seg.type === 'tiro') {
+                    let circlesHTML = '';
+                    for(let i=0; i<seg.targets; i++) {
+                        circlesHTML += `<div class="bg-white border border-black rounded-full w-3 h-3 flex-shrink-0"></div>`;
+                    }
+                    segmentVisual.innerHTML = `
+                        <div class="text-[9px] text-gray-500 font-bold mb-1 uppercase tracking-wide">Tiro: ${seg.targets} Obj</div>
+                        <div class="w-20 min-h-[48px] max-h-[70px] border-2 border-black p-1.5 flex flex-wrap gap-1 justify-center items-center bg-gray-100 overflow-hidden">
+                            ${circlesHTML}
+                        </div>
+                    `;
+                }
+                
+                mainWrapper.appendChild(segmentVisual);
+
+                const actionPanel = document.createElement('div');
+                actionPanel.className = 'flex flex-col space-y-1 w-16';
+                actionPanel.innerHTML = `
+                    <button onclick="openInlineSegmentEditor(${index})" class="bg-blue-500 text-white font-black text-[9px] px-2 py-1 rounded shadow uppercase w-full">Editar</button>
+                    <button onclick="removeSegmentInline(${index})" class="bg-red-600 text-white font-black text-[9px] px-2 py-1 rounded shadow uppercase w-full">Quitar</button>
+                `;
+                mainWrapper.appendChild(actionPanel);
+                canvas.appendChild(mainWrapper);
+                
+                const connector = document.createElement('div');
+                connector.className = 'w-1 h-5 bg-gray-300 my-0.5 mx-auto';
+                canvas.appendChild(connector);
+            });
+
+            canvas.innerHTML += `
+                <button onclick="openSegmentOptions()" class="mt-4 w-12 h-12 rounded-full border-2 border-dashed border-black flex items-center justify-center text-black font-black text-2xl hover:bg-gray-100 active:scale-95 transition-all">
+                    +
+                </button>
+            `;
+        }
+
+        function removeSegmentInline(index) {
+            currentTrackSegments.splice(index, 1);
+            renderTrackCanvas();
+        }
+
+        function openInlineSegmentEditor(index) {
+            inlineEditingSegmentIndex = index;
+            const seg = currentTrackSegments[index];
+            const fieldsContainer = document.getElementById('edit-segment-fields');
+            fieldsContainer.innerHTML = '';
+
+            if (seg.type === 'carrera') {
+                fieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-black mb-1">METROS</label>
+                        <input type="number" id="inline-edit-1" class="w-full border p-2 text-center font-bold" value="${seg.meters}">
+                    </div>`;
+            } else if (seg.type === 'seccion') {
+                let skillsCheckboxes = '';
+                skillNames.forEach(skill => {
+                    let checked = seg.skills && seg.skills.includes(skill.toLowerCase()) ? 'checked' : '';
+                    skillsCheckboxes += `
+                        <label class="flex items-center space-x-2 text-xs font-bold cursor-pointer">
+                            <input type="checkbox" value="${skill.toLowerCase()}" ${checked} class="inline-skills-chk w-4 h-4 accent-black rounded">
+                            <span>${skill}</span>
+                        </label>`;
+                });
+                fieldsContainer.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-black mb-1">TIEMPO PROMEDIO (SEG)</label>
+                        <input type="number" id="inline-edit-1" class="w-full border p-2 text-center font-bold mb-3" value="${seg.avgTime}">
+                        <label class="block text-xs font-bold tracking-wide mb-2 border-b border-gray-200 pb-1">HABILIDADES REQUERIDAS</label>
+                        <div class="grid grid-cols-2 gap-2">${skillsCheckboxes}</div>
+                    </div>`;
+            } else if (seg.type === 'tiro') {
+                let skillsCheckboxes = '';
+                skillNames.forEach(skill => {
+                    let checked = seg.skills && seg.skills.includes(skill.toLowerCase()) ? 'checked' : '';
+                    skillsCheckboxes += `
+                        <label class="flex items-center space-x-2 text-xs font-bold cursor-pointer">
+                            <input type="checkbox" value="${skill.toLowerCase()}" ${checked} class="inline-skills-chk w-4 h-4 accent-black rounded">
+                            <span>${skill}</span>
+                        </label>`;
+                });
+                fieldsContainer.innerHTML = `
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="block text-[10px] font-black mb-1">OBJETIVOS</label>
+                            <input type="number" id="inline-edit-1" class="border p-1 text-center font-bold w-full" value="${seg.targets}">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black mb-1">PROYECTILES</label>
+                            <input type="number" id="inline-edit-2" class="border p-1 text-center font-bold w-full" value="${seg.projectiles}">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black mb-1">SEG DISPARO</label>
+                            <input type="number" step="0.1" id="inline-edit-3" class="border p-1 text-center font-bold w-full" value="${seg.minShootTime}">
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-black mb-1">SEG RECOGER</label>
+                            <input type="number" step="0.1" id="inline-edit-4" class="border p-1 text-center font-bold w-full" value="${seg.minFetchTime}">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold tracking-wide mb-2 border-b border-gray-200 pb-1">HABILIDADES REQUERIDAS</label>
+                        <div class="grid grid-cols-2 gap-2">${skillsCheckboxes}</div>
+                    </div>`;
+            }
+            document.getElementById('modal-edit-segment-inline').classList.remove('hidden');
+        }
+
+        function closeEditSegmentInline() { document.getElementById('modal-edit-segment-inline').classList.add('hidden'); }
+
+        function confirmUpdateSegmentInline() {
+            const seg = currentTrackSegments[inlineEditingSegmentIndex];
+            if (seg.type === 'carrera') {
+                seg.meters = parseInt(document.getElementById('inline-edit-1').value) || 10;
+            } else if (seg.type === 'seccion') {
+                seg.avgTime = parseFloat(document.getElementById('inline-edit-1').value) || 5;
+                seg.skills = Array.from(document.querySelectorAll('.inline-skills-chk:checked')).map(cb => cb.value);
+                if (seg.skills.length === 0) return alert("Selecciona al menos 1 habilidad.");
+            } else if (seg.type === 'tiro') {
+                seg.targets = parseInt(document.getElementById('inline-edit-1').value) || 1;
+                seg.projectiles = parseInt(document.getElementById('inline-edit-2').value) || 1;
+                seg.minShootTime = parseFloat(document.getElementById('inline-edit-3').value) || 1;
+                seg.minFetchTime = parseFloat(document.getElementById('inline-edit-4').value) || 1;
+                seg.skills = Array.from(document.querySelectorAll('.inline-skills-chk:checked')).map(cb => cb.value);
+                if (seg.skills.length === 0) return alert("Selecciona al menos 1 habilidad.");
+            }
+            closeEditSegmentInline();
+            renderTrackCanvas();
+        }
+
+        function generateSkillCheckboxes(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            skillNames.forEach(skill => {
+                container.innerHTML += `
+                    <label class="flex items-center space-x-2 text-xs font-bold cursor-pointer">
+                        <input type="checkbox" value="${skill.toLowerCase()}" class="${containerId}-chk w-4 h-4 accent-black rounded">
+                        <span>${skill}</span>
+                    </label>
+                `;
+            });
+        }
+
+        // --- SISTEMA DE SELECCIÓN DE ZONAS DE PISTA Y FORMULARIOS ---
+        function openSegmentOptions() { document.getElementById('modal-segment-options').classList.remove('hidden'); }
+        function closeSegmentOptions() { document.getElementById('modal-segment-options').classList.add('hidden'); }
+
+        function showFormModal(title, bodyId) {
+            closeSegmentOptions();
+            document.getElementById('segment-form-title').innerText = title;
+            document.querySelectorAll('.segment-form-body').forEach(el => el.classList.add('hidden'));
+            document.getElementById(bodyId).classList.remove('hidden');
+            const inputs = document.getElementById(bodyId).querySelectorAll('input');
+            inputs.forEach(i => { if(i.type === 'checkbox') i.checked = false; else i.value = ''; });
+            document.getElementById('modal-segment-form').classList.remove('hidden');
+        }
+
+        function closeSegmentForm() { document.getElementById('modal-segment-form').classList.add('hidden'); }
+        function openFormCarrera() { pendingSegmentType = 'carrera'; showFormModal("ZONA DE CARRERA", "form-body-carrera"); }
+        function openFormSeccion() { pendingSegmentType = 'seccion'; generateSkillCheckboxes('seccion-skills-container'); showFormModal("SECCIÓN", "form-body-seccion"); }
+        function openFormTiro() { pendingSegmentType = 'tiro'; generateSkillCheckboxes('tiro-skills-container'); showFormModal("ZONA DE TIRO", "form-body-tiro"); }
+
+        function saveSegment() {
+            let newSegment = { type: pendingSegmentType };
+            if (pendingSegmentType === 'carrera') {
+                const m = parseInt(document.getElementById('carrera-meters').value);
+                if (!m || m <= 0) return alert("Introduce metros válidos.");
+                newSegment.meters = m;
+            } else if (pendingSegmentType === 'seccion') {
+                const t = parseFloat(document.getElementById('seccion-time').value);
+                const skills = Array.from(document.querySelectorAll('.seccion-skills-container-chk:checked')).map(cb => cb.value);
+                if (!t || t <= 0 || skills.length === 0) return alert("Llena el tiempo y selecciona al menos 1 habilidad.");
+                newSegment.avgTime = t;
+                newSegment.skills = skills;
+            } else if (pendingSegmentType === 'tiro') {
+                const targets = parseInt(document.getElementById('tiro-targets').value);
+                const ammo = parseInt(document.getElementById('tiro-ammo').value);
+                const shootTime = parseFloat(document.getElementById('tiro-shoot-time').value);
+                const fetchTime = parseFloat(document.getElementById('tiro-fetch-time').value);
+                const skills = Array.from(document.querySelectorAll('.tiro-skills-container-chk:checked')).map(cb => cb.value);
+                if (!targets || !ammo || !shootTime || !fetchTime || skills.length === 0) return alert("Completa campos y selecciona habilidades.");
+                newSegment.targets = targets;
+                newSegment.projectiles = ammo;
+                newSegment.minShootTime = shootTime;
+                newSegment.minFetchTime = fetchTime;
+                newSegment.skills = skills;
+            }
+            currentTrackSegments.push(newSegment);
+            closeSegmentForm();
+            renderTrackCanvas();
+        }
+
+        function saveTrack() {
+            const name = document.getElementById('track-name-input').value.trim();
+            if (!name) return alert("Ponle un nombre a la pista.");
+            if (currentTrackSegments.length === 0) return alert("La pista está vacía.");
+            if (editTrackId) {
+                const idx = tracksList.findIndex(t => t.id === editTrackId);
+                tracksList[idx].name = name;
+                tracksList[idx].segments = [...currentTrackSegments];
+            } else {
+                tracksList.push({ id: Date.now(), name, segments: currentTrackSegments });
+            }
+            saveToLocalStorage();
+            closeTrackBuilder();
+            renderTracksList();
+            updateMatchupSelects();
+        }
+
+        function renderTracksList() {
+            const list = document.getElementById('saved-tracks-container');
+            list.innerHTML = "";
+            if (tracksList.length === 0) {
+                list.innerHTML = `<div class="text-center py-20"><p class="text-gray-400 text-sm">No hay pistas registradas.</p></div>`;
+                return;
+            }
+            tracksList.forEach(track => {
+                list.innerHTML += `
+                    <div class="border border-gray-300 rounded p-4 bg-gray-50 flex justify-between items-center">
+                        <div>
+                            <h3 class="font-black text-lg tracking-wider">${track.name}</h3>
+                            <p class="text-xs text-gray-500 font-bold">${track.segments.length} ZONAS</p>
+                        </div>
+                        <button onclick="openTrackBuilder(${track.id})" class="text-blue-600 font-black tracking-widest text-xs px-2 py-1 active:bg-blue-100 rounded">EDITAR / CONFIGURAR</button>
+                    </div>`;
+            });
+        }
+
+        // --- SISTEMA DE ENFRENTAMIENTOS ---
+        function toggleMatchMode() {
+            const mode = document.querySelector('input[name="match_mode"]:checked').value;
+            const colB = document.getElementById('col-athlete-b');
+            const colA = document.getElementById('col-athlete-a');
+            const colTrack = document.getElementById('col-track');
+            if(mode === 'indiv') {
+                colB.classList.add('hidden');
+                colA.classList.replace('w-1/3', 'w-1/2');
+                colTrack.classList.replace('w-1/3', 'w-1/2');
+            } else {
+                colB.classList.remove('hidden');
+                colA.classList.replace('w-1/2', 'w-1/3');
+                colTrack.classList.replace('w-1/2', 'w-1/3');
+            }
+            checkMatchupReady();
+        }
+
+        function updateMatchupSelects() {
+            const sA = document.getElementById('select-athlete-a');
+            const sB = document.getElementById('select-athlete-b');
+            const sT = document.getElementById('select-track');
+            const valA = sA.value; const valB = sB.value; const valT = sT.value;
+            
+            sA.innerHTML = '<option value="">Sel...</option>';
+            sB.innerHTML = '<option value="">Sel...</option>';
+            sT.innerHTML = '<option value="">Seleccionar...</option>';
+
+            athletesList.forEach(a => {
+                sA.innerHTML += `<option value="${a.id}">${a.name} (${a.gender[0].toUpperCase()})</option>`;
+                sB.innerHTML += `<option value="${a.id}">${a.name} (${a.gender[0].toUpperCase()})</option>`;
+            });
+            tracksList.forEach(t => { sT.innerHTML += `<option value="${t.id}">${t.name}</option>`; });
+            sA.value = valA; sB.value = valB; sT.value = valT;
+            checkMatchupReady();
+        }
+
+        function checkMatchupReady() {
+            const mode = document.querySelector('input[name="match_mode"]:checked').value;
+            const a = document.getElementById('select-athlete-a').value;
+            const b = document.getElementById('select-athlete-b').value;
+            const t = document.getElementById('select-track').value;
+            const btn = document.getElementById('btn-start-match');
+            
+            let isReady = false;
+            if(mode === '1v1' && a && b && t && a !== b) isReady = true;
+            if(mode === 'indiv' && a && t) isReady = true;
+
+            if (isReady) {
+                btn.disabled = false;
+                btn.className = "w-full bg-blue-600 text-white font-black tracking-widest py-4 rounded-lg active:scale-95 transition-all shadow-lg pulse-border";
+            } else {
+                btn.disabled = true;
+                btn.className = "w-full bg-gray-300 text-gray-500 font-black tracking-widest py-4 rounded-lg cursor-not-allowed transition-colors";
+            }
+        }
+
+        // --- SISTEMA DE MOTOR DE ANIMACIÓN ---
+        let globalAnimations = [];
+        let gameTimeScale = 1;
+        let isGamePaused = false;
+        let lastTimestamp = 0;
+        let raceInProgress = false;
+
+        function gameLoop(timestamp) {
+            if (!lastTimestamp) lastTimestamp = timestamp;
+            let delta = timestamp - lastTimestamp;
+            lastTimestamp = timestamp;
+            if (!isGamePaused && raceInProgress) {
+                let scaledDelta = delta * gameTimeScale;
+                globalAnimations.forEach(anim => anim.update(scaledDelta));
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        requestAnimationFrame(gameLoop);
+
+        function togglePauseGame() {
+            isGamePaused = !isGamePaused;
+            const btn = document.getElementById('btn-pause');
+            if (isGamePaused) {
+                btn.innerText = "REANUDAR";
+                btn.classList.replace('bg-red-500', 'bg-green-500');
+            } else {
+                btn.innerText = "PAUSA";
+                btn.classList.replace('bg-green-500', 'bg-red-500');
+            }
+        }
+
+        function setGameSpeed(speed) {
+            gameTimeScale = speed;
+            document.querySelectorAll('.btn-speed').forEach(b => {
+                b.classList.remove('bg-black', 'text-white');
+                b.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-gray-200', 'text-gray-700');
+            event.target.classList.add('bg-black', 'text-white');
+        }
+
+        function moveToYAsync(avatar, targetY, durationS) {
+            return new Promise((resolve, reject) => {
+                let startY = parseFloat(avatar.dataset.currentY || 0);
+                let distance = targetY - startY;
+                let totalMs = durationS * 1000;
+                let elapsedMs = 0;
+                if (totalMs <= 0) {
+                    avatar.style.transform = `translate3d(-50%, ${targetY}px, 0)`;
+                    avatar.dataset.currentY = targetY;
+                    return resolve();
+                }
+                let anim = {
+                    update: (deltaMs) => {
+                        if (!raceInProgress) {
+                            globalAnimations = globalAnimations.filter(a => a !== anim);
+                            return reject("CARRERA_TERMINADA");
+                        }
+                        elapsedMs += deltaMs;
+                        let progress = Math.min(elapsedMs / totalMs, 1);
+                        let currentY = startY + (distance * progress);
+                        avatar.style.transform = `translate3d(-50%, ${currentY}px, 0)`;
+                        avatar.dataset.currentY = currentY;
+                        if (progress >= 1) {
+                            globalAnimations = globalAnimations.filter(a => a !== anim);
+                            resolve();
+                        }
+                    }
+                };
+                globalAnimations.push(anim);
+            });
+        }
+
+        function waitGameTime(durationS) {
+            return new Promise((resolve, reject) => {
+                let remainingMs = durationS * 1000;
+                let anim = {
+                    update: (deltaMs) => {
+                        if (!raceInProgress) {
+                            globalAnimations = globalAnimations.filter(a => a !== anim);
+                            return reject("CARRERA_TERMINADA");
+                        }
+                        remainingMs -= deltaMs;
+                        if (remainingMs <= 0) {
+                            globalAnimations = globalAnimations.filter(a => a !== anim);
+                            resolve();
+                        }
+                    }
+                };
+                globalAnimations.push(anim);
+            });
+        }
+
+        // --- SISTEMA EJECUCIÓN DINÁMICA DE LA CARRERA ---
+        function startMatchup() {
+            const mode = document.querySelector('input[name="match_mode"]:checked').value;
+            const idA = document.getElementById('select-athlete-a').value;
+            const idT = document.getElementById('select-track').value;
+            const athleteA = athletesList.find(a => a.id == idA);
+            const track = tracksList.find(t => t.id == idT);
+
+            document.getElementById('matchup-setup').classList.add('hidden');
+            document.getElementById('matchup-race').classList.remove('hidden');
+            document.getElementById('race-results').classList.add('hidden');
+            document.getElementById('btn-trigger-race').classList.remove('hidden');
+            document.getElementById('race-controls-panel').classList.add('hidden');
+
+            isGamePaused = false; gameTimeScale = 1; setGameSpeed(1);
+            document.getElementById('btn-pause').innerText = "PAUSA";
+            document.getElementById('btn-pause').classList.replace('bg-green-500', 'bg-red-500');
+            globalAnimations = []; raceInProgress = false;
+
+            const laneA = document.getElementById('lane-a'); const laneB = document.getElementById('lane-b');
+            const vsLabel = document.getElementById('vs-label'); const nameB = document.getElementById('racer-b-name');
+
+            // Hard reset de carriles para limpiar cualquier rastro visual o tags residuales de la carrera previa
+            laneA.innerHTML = '<div id="avatar-a" class="absolute w-12 h-12 rounded-full border-2 border-black bg-white object-cover shadow-lg avatar-racer z-30 flex items-center justify-center left-1/2 -translate-x-1/2"><img id="img-avatar-a" src="" class="w-full h-full rounded-full object-cover"></div>';
+            laneB.innerHTML = '<div id="avatar-b" class="absolute w-12 h-12 rounded-full border-2 border-black bg-white object-cover shadow-lg avatar-racer z-30 flex items-center justify-center left-1/2 -translate-x-1/2"><img id="img-avatar-b" src="" class="w-full h-full rounded-full object-cover"></div>';
+
+            const avA = document.getElementById('avatar-a'); const avB = document.getElementById('avatar-b');
+            avA.style.opacity = "1";
+            avA.style.zIndex = "30";
+            avA.classList.remove('hidden');
+            avB.style.opacity = "1";
+            avB.style.zIndex = "30";
+            avB.classList.remove('hidden');
+
+            document.getElementById('racer-a-name').innerText = athleteA.name.toUpperCase();
+            document.getElementById('img-avatar-a').src = athleteA.photo;
+
+            if (mode === 'indiv') {
+                laneB.classList.add('hidden'); avB.classList.add('hidden');
+                vsLabel.classList.add('hidden'); nameB.classList.add('hidden');
+                laneA.classList.remove('w-1/2', 'border-r'); laneA.classList.add('w-full');
+            } else {
+                laneB.classList.remove('hidden'); avB.classList.remove('hidden');
+                vsLabel.classList.remove('hidden'); nameB.classList.remove('hidden');
+                laneA.classList.replace('w-full', 'w-1/2'); laneA.classList.add('border-r');
+                
+                const idB = document.getElementById('select-athlete-b').value;
+                const athleteB = athletesList.find(b => b.id == idB);
+                document.getElementById('racer-b-name').innerText = athleteB.name.toUpperCase();
+                document.getElementById('img-avatar-b').src = athleteB.photo;
+            }
+            
+            let baseHTML = '';
+            track.segments.forEach((seg, i) => {
+                let idPrefix = `seg-${i}`;
+                if (seg.type === 'carrera') {
+                    let h = Math.max(40, Math.min(400, seg.meters * 4.0));
+                    baseHTML += `
+                        <div class="text-[10px] text-gray-400 font-bold mb-1 pt-4">${seg.meters} METROS</div>
+                        <div id="[PREFIX]${idPrefix}" class="w-10 border-l-4 border-r-4 border-black relative" style="height: ${h}px"></div>
+                    `;
+                } else if (seg.type === 'seccion') {
+                    baseHTML += `
+                        <div id="[PREFIX]${idPrefix}" class="w-20 h-28 border-4 border-black bg-yellow-300 flex items-center justify-center shadow-inner relative mt-4">
+                            <span class="font-black text-black tracking-widest transform -rotate-90 text-sm opacity-50">SEC</span>
+                        </div>
+                    `;
+                } else if (seg.type === 'tiro') {
+                    let circlesHTML = '';
+                    for(let j=0; j<seg.targets; j++) {
+                        circlesHTML += `<div class="bg-white border-2 border-black rounded-full w-4 h-4 flex-shrink-0"></div>`;
+                    }
+                    baseHTML += `
+                        <div id="[PREFIX]${idPrefix}" class="w-24 mt-4 relative border-4 border-black bg-gray-100/40 flex flex-col items-center">
+                            <div class="w-full h-[60px] border-b border-dashed border-gray-400 flex items-center justify-center bg-white/50 text-[9px] font-black tracking-wider text-gray-500">ZONA DISPARO</div>
+                            <div class="w-full p-2 flex flex-wrap gap-1 justify-center items-center min-h-[40px]">
+                                ${circlesHTML}
+                            </div>
+                        </div>
+                    `;
+                }
+                baseHTML += `<div class="w-1 h-6 bg-gray-300 my-1"></div>`;
+            });
+            baseHTML += `<div id="[PREFIX]finish" class="w-24 h-10 bg-black flex items-center justify-center text-white font-black text-xs tracking-widest relative shadow-md mt-2">META</div>`;
+
+            laneA.insertAdjacentHTML('beforeend', baseHTML.replaceAll('[PREFIX]', 'a-'));
+            if(mode === '1v1') laneB.insertAdjacentHTML('beforeend', baseHTML.replaceAll('[PREFIX]', 'b-'));
+
+            // Forzar reseteo de posición gráfica inicial en el renderizado
+            avA.style.transform = "translate3d(-50%, 0px, 0)";
+            avB.style.transform = "translate3d(-50%, 0px, 0)";
+            avA.dataset.currentY = 0;
+            avB.dataset.currentY = 0;
+            
+            cachedRaceParams = { mode, athleteA, track };
+            document.getElementById('race-scroll-container').scrollTop = 0;
+        }
+
+        function triggerRaceStart() {
+            if (!cachedRaceParams) return;
+            document.getElementById('btn-trigger-race').classList.add('hidden');
+            document.getElementById('race-controls-panel').classList.remove('hidden');
+            
+            raceInProgress = true;
+            const { mode, athleteA, track } = cachedRaceParams;
+            
+            let racerTimes = { a: 0, b: 0 };
+
+            const onAthleteFinished = (prefix, totalTime) => {
+                if (!raceInProgress && mode === '1v1') return; // Si ya terminó el primero en 1v1, ignorar llamadas secundarias
+                
+                racerTimes[prefix] = totalTime;
+                if (mode === 'indiv') {
+                    raceInProgress = false; 
+                    processRaceEndMetrics(mode, track, athleteA, racerTimes, prefix);
+                } else if (mode === '1v1') {
+                    raceInProgress = false; // DETIENE LA CARRERA INMEDIATAMENTE PARA EL OTRO ATLETA
+                    processRaceEndMetrics(mode, track, athleteA, racerTimes, prefix);
+                }
+            };
+
+            runAthleteRace('a', athleteA, track, onFinish = onAthleteFinished);
+            if(mode === '1v1') {
+                const idB = document.getElementById('select-athlete-b').value;
+                const athleteB = athletesList.find(b => b.id == idB);
+                runAthleteRace('b', athleteB, track, onFinish = onAthleteFinished);
+            }
+        }
+
+        function calcCarreraTime(athlete, meters) {
+            const kmh = athlete.skills.velocidad * 0.48;
+            return (meters * 3.6) / kmh;
+        }
+
+        function calcSeccionTime(athlete, skills, avgTime) {
+            let sum = 0; skills.forEach(s => sum += athlete.skills[s]);
+            let tierScore = Math.round(sum / skills.length);
+            let tier = tierScore <= 20 ? 1 : tierScore <= 40 ? 2 : tierScore <= 60 ? 3 : tierScore <= 80 ? 4 : 5;
+            const r = Math.random() * 100;
+            let speed = 'normal';
+            if(tier === 1) speed = r < 70 ? 'lento' : r < 90 ? 'normal' : 'rapido';
+            else if(tier === 2) speed = r < 45 ? 'lento' : r < 85 ? 'normal' : 'rapido';
+            else if(tier === 3) speed = r < 20 ? 'lento' : r < 80 ? 'normal' : 'rapido';
+            else if(tier === 4) speed = r < 10 ? 'lento' : r < 50 ? 'normal' : 'rapido';
+            else speed = r < 5 ? 'lento' : r < 25 ? 'normal' : 'rapido';
+
+            let factor = speed === 'rapido' ? 0.5 : speed === 'normal' ? 1.0 : 1.5;
+            return avgTime * factor * (0.9 + Math.random()*0.2);
+        }
+
+        async function simulateTiroPhase(prefix, athlete, seg, prefixIndex) {
+            let targetsLeft = seg.targets;
+            let currentAmmo = seg.projectiles;
+            let totalTimeSpent = 0;
+            let sum = 0; seg.skills.forEach(s => sum += athlete.skills[s]);
+            let tierScore = Math.round(sum / seg.skills.length);
+            let hitProb = tierScore <= 20 ? 25 : tierScore <= 40 ? 45 : tierScore <= 60 ? 55 : tierScore <= 80 ? 70 : 88;
+            
+            const velMod = 1 - ((athlete.skills.velocidad * 0.5) / 100);
+            const shootTime = seg.minShootTime * velMod;
+            const fetchTimePerOne = seg.minFetchTime * velMod;
+            const domZone = document.getElementById(`${prefix}-seg-${prefixIndex}`);
+            const avatar = document.getElementById(`avatar-${prefix}`);
+
+            while(targetsLeft > 0) {
+                if (!raceInProgress) return totalTimeSpent;
+                if(currentAmmo > 0) {
+                    await waitGameTime(shootTime);
+                    totalTimeSpent += shootTime; currentAmmo--;
+                    if(Math.random() * 100 <= hitProb) {
+                        targetsLeft--;
+                        if(domZone && domZone.querySelector('.bg-white')) {
+                            domZone.querySelector('.bg-white').remove();
+                        }
+                    }
+                } else {
+                    let fetched = Math.floor(Math.random() * seg.projectiles) + 1;
+                    let timeToFetch = fetchTimePerOne * fetched;
+                    
+                    avatar.style.opacity = 0.35;
+                    avatar.style.zIndex = "10"; 
+                    await waitGameTime(timeToFetch);
+                    totalTimeSpent += timeToFetch;
+                    avatar.style.opacity = 1;
+                    avatar.style.zIndex = "30";
+                    currentAmmo = fetched;
+                }
+            }
+            return totalTimeSpent;
+        }
+
+        function appendTimeTag(domElement, seconds) {
+            const tag = document.createElement('div');
+            tag.className = 'absolute -right-14 top-1/2 -translate-y-1/2 bg-white border border-gray-300 text-blue-600 font-black text-[11px] px-1 py-0.5 rounded shadow time-tag z-40';
+            tag.innerText = `${seconds.toFixed(1)}s`;
+            domElement.appendChild(tag);
+        }
+
+        async function runAthleteRace(prefix, athlete, track, onFinish) {
+            try {
+                const avatar = document.getElementById(`avatar-${prefix}`);
+                const scrollContainer = document.getElementById('race-scroll-container');
+                let accumulatedClock = 0;
+
+                for (let i = 0; i < track.segments.length; i++) {
+                    if (!raceInProgress) return;
+                    const seg = track.segments[i];
+                    const domEl = document.getElementById(`${prefix}-seg-${i}`);
+                    
+                    let stopOffset = (seg.type === 'tiro') ? -25 : 0;
+                    let topTarget = domEl.offsetTop + stopOffset - 12;
+                    await moveToYAsync(avatar, topTarget, 0.4);
+                    
+                    if (prefix === 'a' && raceInProgress) {
+                        scrollContainer.scrollTo({ top: Math.max(0, (topTarget * 0.65) - 80), behavior: 'smooth' });
+                    }
+                    
+                    let segmentDuration = 0;
+                    if (seg.type === 'carrera' || seg.type === 'seccion') {
+                        segmentDuration = seg.type === 'carrera' ? calcCarreraTime(athlete, seg.meters) : calcSeccionTime(athlete, seg.skills, seg.avgTime);
+                        let bottomTarget = domEl.offsetTop + domEl.offsetHeight;
+                        await moveToYAsync(avatar, bottomTarget, segmentDuration);
+                    } else if (seg.type === 'tiro') {
+                        segmentDuration = await simulateTiroPhase(prefix, athlete, seg, i);
+                        if (!raceInProgress) return;
+                        let bottomTarget = domEl.offsetTop + domEl.offsetHeight + 10;
+                        await moveToYAsync(avatar, bottomTarget, 0.2);
+                    }
+                    accumulatedClock += segmentDuration;
+                    appendTimeTag(domEl, segmentDuration);
+                }
+
+                if (!raceInProgress) return;
+                const metaEl = document.getElementById(`${prefix}-finish`);
+                await moveToYAsync(avatar, metaEl.offsetTop + 5, 0.6);
+                onFinish(prefix, accumulatedClock);
+            } catch (error) {
+                // Control de detención segura
+            }
+        }
+
+        // --- PROCESAMIENTO CORE DE MÉTRICAS Y ACTUALIZACIÓN ---
+        function processRaceEndMetrics(mode, track, athleteA, racerTimes, winnerPrefix) {
+            const idB = document.getElementById('select-athlete-b').value;
+            const athleteB = (mode === '1v1') ? athletesList.find(b => b.id == idB) : null;
+            
+            let timeA = racerTimes.a;
+
+            let winStr, finalTimeDisplay;
+
+            if (mode === 'indiv') {
+                let logsTarget = athleteA.gender === 'hombre' ? statsState.hombre.logsIndiv : statsState.mujer.logsIndiv;
+                let singleLog = `Carrera de ${athleteA.name} en ${track.name} tiempo: ${formatRaceTimeDisplay(timeA)}`;
+                logsTarget.unshift(singleLog);
+
+                updateCircuitRecord(athleteA.gender, athleteA.id, athleteA.name, track.id, track.name, timeA, 'indiv');
+                
+                winStr = `${athleteA.name}`;
+                finalTimeDisplay = `Tiempo total: ${formatRaceTimeDisplay(timeA)}`;
+            } else {
+                if (athleteA.gender !== athleteB.gender) {
+                    winStr = winnerPrefix === 'a' ? athleteA.name : athleteB.name;
+                    finalTimeDisplay = `Exhibición Mixta (No suma puntos)`;
+                } else {
+                    let gender = athleteA.gender;
+                    let stateGroup = statsState[gender];
+                    
+                    if(!stateGroup.general1v1[athleteA.id]) stateGroup.general1v1[athleteA.id] = { g:0, p:0, plus:0, minus:0 };
+                    if(!stateGroup.general1v1[athleteB.id]) stateGroup.general1v1[athleteB.id] = { g:0, p:0, plus:0, minus:0 };
+
+                    let winner, loser, winnerTime;
+                    if (winnerPrefix === 'a') {
+                        winner = athleteA; loser = athleteB; winnerTime = racerTimes.a;
+                    } else {
+                        winner = athleteB; loser = athleteA; winnerTime = racerTimes.b;
+                    }
+
+                    let delta = (gender === 'hombre') ? 1 : 0.5;
+
+                    stateGroup.general1v1[winner.id].g += 1;
+                    stateGroup.general1v1[loser.id].p += 1;
+
+                    stateGroup.general1v1[winner.id].plus += delta;
+                    stateGroup.general1v1[loser.id].minus += delta;
+
+                    let battleLog = `${winner.name} vs ${loser.name} en ${track.name} ganó ${winner.name} tiempo: ${formatRaceTimeDisplay(winnerTime)}`;
+                    stateGroup.logs1v1.unshift(battleLog);
+
+                    updateCircuitRecord(gender, winner.id, winner.name, track.id, track.name, winnerTime, '1v1');
+
+                    winStr = `Ganador: ${winner.name}`;
+                    finalTimeDisplay = `Tiempo: ${formatRaceTimeDisplay(winnerTime)}`;
+                }
+            }
+
+            saveToLocalStorage();
+
+            document.getElementById('winner-text').innerText = winStr;
+            document.getElementById('winner-time').innerText = finalTimeDisplay;
+            document.getElementById('race-results').classList.remove('hidden');
+        }
+
+        function updateCircuitRecord(gender, athleteId, athleteName, trackId, trackName, currentRaceTime, mode) {
+            let key = (mode === 'indiv') ? 'recordsIndiv' : 'records1v1';
+            if (!statsState[gender][key]) statsState[gender][key] = {};
+            let recordContainer = statsState[gender][key];
+            if (!recordContainer[trackId]) recordContainer[trackId] = {};
+            
+            if (!recordContainer[trackId][athleteId]) {
+                recordContainer[trackId][athleteId] = { trackId, trackName, time: currentRaceTime, athleteName, athleteId };
+            } else {
+                if (currentRaceTime < recordContainer[trackId][athleteId].time) {
+                    recordContainer[trackId][athleteId].time = currentRaceTime;
+                }
+            }
+        }
+
+        // --- RENDIMIENTO DE VISTA DE TABLAS ---
+        function changeTablesGender(g) {
+            activeTablesGender = g;
+            document.getElementById('btn-gender-h').className = g === 'hombre' ? "w-1/2 py-1.5 text-xs font-black rounded uppercase transition-all bg-black text-white" : "w-1/2 py-1.5 text-xs font-black rounded uppercase transition-all bg-gray-100 text-gray-500";
+            document.getElementById('btn-gender-m').className = g === 'mujer' ? "w-1/2 py-1.5 text-xs font-black rounded uppercase transition-all bg-black text-white" : "w-1/2 py-1.5 text-xs font-black rounded uppercase transition-all bg-gray-100 text-gray-500";
+            renderStatsTables();
+        }
+
+        function changeTablesMode(m) {
+            activeTablesMode = m;
+            document.getElementById('btn-mode-1v1').className = m === '1v1' ? "w-1/2 py-1 text-[10px] font-black rounded uppercase transition-all bg-blue-600 text-white" : "w-1/2 py-1 text-[10px] font-black rounded uppercase transition-all bg-gray-100 text-gray-500";
+            document.getElementById('btn-mode-indiv').className = m === 'indiv' ? "w-1/2 py-1 text-[10px] font-black rounded uppercase transition-all bg-blue-600 text-white" : "w-1/2 py-1 text-[10px] font-black rounded uppercase transition-all bg-gray-100 text-gray-500";
+            
+            if (m === 'indiv') {
+                document.getElementById('wrapper-table-general').classList.add('hidden');
+            } else {
+                document.getElementById('wrapper-table-general').classList.remove('hidden');
+            }
+            renderStatsTables();
+        }
+
+        function renderStatsTables() {
+            let gender = activeTablesGender;
+            let mode = activeTablesMode;
+            let group = statsState[gender];
+
+            const tbodyGen = document.getElementById('tbody-general');
+            tbodyGen.innerHTML = '';
+            
+            if (mode === '1v1') {
+                let scopedAthletes = athletesList.filter(a => a.gender === gender);
+                let tableRowsData = scopedAthletes.map(a => {
+                    let rowStats = group.general1v1[a.id] || { g:0, p:0, plus:0, minus:0 };
+                    let netPlus = Math.max(0, rowStats.plus - rowStats.minus);
+                    let netMinus = Math.max(0, rowStats.minus - rowStats.plus);
+                    
+                    return { athlete: a, stats: rowStats, displayPlus: netPlus, displayMinus: netMinus };
+                });
+
+                tableRowsData.sort((rowX, rowY) => {
+                    if (rowY.displayPlus !== rowX.displayPlus) {
+                        return rowY.displayPlus - rowX.displayPlus;
+                    }
+                    return rowX.athlete.name.localeCompare(rowY.athlete.name);
+                });
+
+                tableRowsData.forEach((item, idx) => {
+                    let rowColorClass = "bg-white text-black"; 
+                    let badgeColorClass = "text-gray-500 bg-gray-100";
+                    if(item.displayPlus > 0) {
+                        rowColorClass = "bg-green-50 text-green-900 border-l-4 border-green-600";
+                        badgeColorClass = "text-green-700 bg-green-200";
+                    } else if(item.displayMinus > 0) {
+                        rowColorClass = "bg-red-50 text-red-900 border-l-4 border-red-600";
+                        badgeColorClass = "text-red-700 bg-red-200";
+                    }
+
+                    tbodyGen.innerHTML += `
+                        <tr class="border-b border-gray-100 last:border-0 ${rowColorClass}">
+                            <td class="text-center font-black text-[11px] font-mono py-2 px-1">${idx + 1}</td>
+                            <td class="py-2 pl-2 flex items-center space-x-2">
+                                <img src="${item.athlete.photo}" class="w-7 h-7 rounded-full object-cover border">
+                                <span class="font-bold uppercase text-[11px] truncate max-w-[100px]">${item.athlete.name}</span>
+                            </td>
+                            <td class="text-center font-bold font-mono">${item.stats.g}</td>
+                            <td class="text-center font-bold font-mono">${item.stats.p}</td>
+                            <td class="text-center"><span class="px-1.5 py-0.5 rounded font-black text-[10px] ${badgeColorClass}">+${item.displayPlus}</span></td>
+                            <td class="text-center font-bold font-mono text-gray-400">-${item.displayMinus}</td>
+                        </tr>`;
+                });
+            }
+
+            const tbodyRec = document.getElementById('tbody-records');
+            tbodyRec.innerHTML = '';
+            let recordSource = (mode === 'indiv') ? group.recordsIndiv : group.records1v1;
+            
+            let scopedAthletesForRecords = athletesList.filter(a => a.gender === gender);
+            let finalRecordsData = [];
+
+            scopedAthletesForRecords.forEach(athlete => {
+                let athleteBestRecords = [];
+                Object.keys(recordSource).forEach(trackId => {
+                    let trackRecords = recordSource[trackId];
+                    if (trackRecords && trackRecords[athlete.id]) {
+                        athleteBestRecords.push(trackRecords[athlete.id]);
+                    }
+                });
+
+                if (athleteBestRecords.length > 0) {
+                    athleteBestRecords.forEach(rec => {
+                        finalRecordsData.push({ athleteName: athlete.name, trackName: rec.trackName, time: rec.time, hasTime: true });
+                    });
+                } else {
+                    finalRecordsData.push({ athleteName: athlete.name, trackName: "NINGUNO", time: Infinity, hasTime: false });
+                }
+            });
+
+            finalRecordsData.sort((x, y) => x.time - y.time);
+
+            if (finalRecordsData.length === 0) {
+                tbodyRec.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-gray-400 text-[11px]">Ningún récord registrado aún</td></tr>`;
+            } else {
+                finalRecordsData.forEach((rec, idx) => {
+                    let displayTime = rec.hasTime ? formatRaceTimeDisplay(rec.time) : "SIN TIEMPO";
+                    let rowStyle = rec.hasTime ? "font-black text-blue-600" : "text-gray-400 font-bold";
+                    tbodyRec.innerHTML += `
+                        <tr class="border-b border-gray-100 last:border-0 font-mono text-[11px]">
+                            <td class="text-center font-black py-2 font-mono px-1">${idx + 1}</td>
+                            <td class="py-2 pl-2 font-sans font-bold uppercase">${rec.athleteName}</td>
+                            <td class="py-2 text-gray-500 font-sans truncate max-w-[110px]">${rec.trackName}</td>
+                            <td class="py-2 text-right ${rowStyle}">${displayTime}</td>
+                        </tr>`;
+                });
+            }
+
+            const logsContainer = document.getElementById('list-history-logs');
+            logsContainer.innerHTML = '';
+            let targetLogs = (mode === 'indiv') ? group.logsIndiv : group.logs1v1;
+
+            if(targetLogs.length === 0) {
+                logsContainer.innerHTML = `<p class="text-center text-gray-400 py-3">No hay registros de carreras</p>`;
+            } else {
+                targetLogs.forEach(log => {
+                    logsContainer.innerHTML += `<div class="p-1 border-b border-gray-100 text-gray-600 leading-tight uppercase">${log}</div>`;
+                });
+            }
+        }
+
+        function resetStatsHistory() {
+            if(!confirm("¿Seguro que deseas reiniciar las tablas y borrar el historial de enfrentamientos?")) return;
+            statsState = {
+                hombre: { general1v1: {}, records1v1: {}, recordsIndiv: {}, logs1v1: [], logsIndiv: [] },
+                mujer: { general1v1: {}, records1v1: {}, recordsIndiv: {}, logs1v1: [], logsIndiv: [] }
+            };
+            saveToLocalStorage();
+            renderStatsTables();
+        }
+
+        function exitMatchup() {
+            raceInProgress = false; globalAnimations = []; cachedRaceParams = null;
+            document.getElementById('matchup-race').classList.add('hidden');
+            document.getElementById('matchup-setup').classList.remove('hidden');
+            document.getElementById('select-athlete-a').value = "";
+            document.getElementById('select-athlete-b').value = "";
+            document.getElementById('select-track').value = "";
+            checkMatchupReady();
+        }
+
+        function copyAllTablesData() {
+            let gender = activeTablesGender;
+            let group = statsState[gender];
+            let scopedAthletes = athletesList.filter(a => a.gender === gender);
+            
+            let textOutput = `=== REPORT DE ESTADÍSTICAS COMPLETO - GÉNERO: ${gender.toUpperCase()} ===\n\n`;
+            
+            textOutput += `--- RENDIMIENTO GENERAL (1VS1) ---\n`;
+            let tableRowsData = scopedAthletes.map(a => {
+                let rowStats = group.general1v1[a.id] || { g:0, p:0, plus:0, minus:0 };
+                let netPlus = Math.max(0, rowStats.plus - rowStats.minus);
+                let netMinus = Math.max(0, rowStats.minus - rowStats.plus);
+                return { athlete: a, stats: rowStats, displayPlus: netPlus, displayMinus: netMinus };
+            }).sort((rowX, rowY) => rowY.displayPlus - rowX.displayPlus);
+
+            if(tableRowsData.length === 0) {
+                textOutput += "No hay atletas registrados.\n";
+            } else {
+                tableRowsData.forEach((item, idx) => {
+                    textOutput += `${idx + 1}. ATLETA: ${item.athlete.name.toUpperCase()} | G: ${item.stats.g} | P: ${item.stats.p} | Puntos: +${item.displayPlus} / -${item.displayMinus}\n`;
+                });
+            }
+            
+            textOutput += `\n--- RÉCORDS EN CIRCUITO (MODO 1VS1) ---\n`;
+            let records1v1Empty = true;
+            Object.keys(group.records1v1).forEach(trackId => {
+                let trackRecords = group.records1v1[trackId];
+                Object.keys(trackRecords).forEach(athleteId => {
+                    let rec = trackRecords[athleteId];
+                    textOutput += `Circuito: ${rec.trackName.toUpperCase()} | Atleta: ${rec.athleteName.toUpperCase()} | Récord: ${formatRaceTimeDisplay(rec.time)}\n`;
+                    records1v1Empty = false;
+                });
+            });
+            if(records1v1Empty) textOutput += "Sin récords en 1vs1.\n";
+
+            textOutput += `\n--- RÉCORDS EN CIRCUITO (MODO INDIVIDUAL) ---\n`;
+            let recordsIndivEmpty = true;
+            Object.keys(group.recordsIndiv).forEach(trackId => {
+                let trackRecords = group.recordsIndiv[trackId];
+                Object.keys(trackRecords).forEach(athleteId => {
+                    let rec = trackRecords[athleteId];
+                    textOutput += `Circuito: ${rec.trackName.toUpperCase()} | Atleta: ${rec.athleteName.toUpperCase()} | Récord: ${formatRaceTimeDisplay(rec.time)}\n`;
+                    recordsIndivEmpty = false;
+                });
+            });
+            if(recordsIndivEmpty) textOutput += "Sin récords individuales.\n";
+
+            textOutput += `\n--- REGISTRO DE ENFRENTAMIENTOS (1VS1) ---\n`;
+            if(group.logs1v1.length === 0) {
+                textOutput += "No hay logs de 1vs1.\n";
+            } else {
+                group.logs1v1.forEach(log => { textOutput += `- ${log}\n`; });
+            }
+
+            textOutput += `\n--- REGISTRO DE ENFRENTAMIENTOS (INDIVIDUAL) ---\n`;
+            if(group.logsIndiv.length === 0) {
+                textOutput += "No hay logs individuales.\n";
+            } else {
+                group.logsIndiv.forEach(log => { textOutput += `- ${log}\n`; });
+            }
+
+            navigator.clipboard.writeText(textOutput).then(() => {
+                alert(`¡Estadísticas completas de ${gender.toUpperCase()}s copiadas con éxito al portapapeles!`);
+            }).catch(err => {
+                alert("Error al intentar copiar las tablas.");
+            });
+        }
+
+        renderAthletes();
+        renderTracksList();
+        updateMatchupSelects();
+    </script>
+</body>
+</html>
